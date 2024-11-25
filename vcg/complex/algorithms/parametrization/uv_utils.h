@@ -60,6 +60,56 @@ public:
         return Area;
     }
 
+	// uniform scale UV coordinates so that area in UV space is the same of the area of surface of the mesh
+	static void PerWedgeRegularizeTexArea(MeshType &m)
+	{
+		float areaTex=0;
+		float areaGeo=0;
+
+		vcg::Box2f UVBox = tri::UV_Utils<MeshType>::PerWedgeUVBox(m);
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+		{
+			areaTex+= fabs((fi->WT(1).P() - fi->WT(0).P()) ^ (fi->WT(2).P() - fi->WT(0).P())) ;
+			areaGeo+= DoubleArea(*fi);
+		}
+
+		float ratio = sqrt(areaGeo/areaTex);
+
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+		{
+			for(int j=0;j<3;++j)
+				fi->WT(j).P() = (fi->WT(j).P()-UVBox.min) *ratio;
+		}
+	}
+
+	static void PerWedgeScaleToUnitSpace(MeshType &m)
+	{
+		vcg::Box2f UVBox = tri::UV_Utils<MeshType>::PerWedgeUVBox(m);
+
+		Point2f diff = UVBox.max - UVBox.min;
+		for(auto &f : m.face) {
+			for(int i = 0; i < 3; i++) {
+				f.WT(i).P() -= UVBox.min;
+				f.WT(i).P().X() /= diff.X();
+				f.WT(i).P().Y() /= diff.Y();
+			}
+		}
+	}
+
+	static void PerVertScaleToUnitSpace(MeshType &m)
+	{
+		vcg::Box2f UVBox = tri::UV_Utils<MeshType>::PerVertUVBox(m);
+
+		Point2f diff = UVBox.max - UVBox.min;
+
+		for(auto &v : m.vert) {
+			v.T().P() -= UVBox.min;
+			v.T().P().X() /= diff.X();
+			v.T().P().Y() /= diff.Y();
+		}
+	}
+
+
     ///scale vert UV to match 3D area
     static void ScaleVertUVToMatchArea(MeshType &m)
     {

@@ -80,29 +80,6 @@ public:
     }
   }
 
- // take a mesh and rescale its uv so that they are in the 0..1 range
- static void RegularizeTexArea(VoroMesh &m)
-  {
-    float areaTex=0;
-    float areaGeo=0;
-
-    vcg::Box2f UVBox = tri::UV_Utils<VoroMesh>::PerWedgeUVBox(m);
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-    {
-      areaTex+= fabs((fi->WT(1).P() - fi->WT(0).P()) ^ (fi->WT(2).P() - fi->WT(0).P())) ;
-      areaGeo+= DoubleArea(*fi);
-    }
-
-    float ratio = sqrt(areaGeo/areaTex);
-
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-    {
-      for(int j=0;j<3;++j)
-        fi->WT(j).P() = (fi->WT(j).P()-UVBox.min) *ratio;
-    }
-  }
-
-
 public:
  struct VoronoiAtlasParam
  {
@@ -191,7 +168,7 @@ public:
         PS.FixDefaultVertices();
         PS.SolvePoisson(false);
         tri::UpdateTexture<VoroMesh>::WedgeTexFromVertexTex(*rm);
-        RegularizeTexArea(*rm);
+        tri::UV_Utils<VoroMesh>::PerWedgeRegularizeTexArea(*rm);
 
         std::vector<Point2f> uvBorder;
         CollectUVBorder(rm,uvBorder);

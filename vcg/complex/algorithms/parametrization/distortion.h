@@ -476,7 +476,7 @@ public:
         return tot / totA;
     }
 
-    static ScalarType SetQasDistorsion(MeshType &m, DistType DType=AreaDist)
+    static ScalarType SetQasDistorsion(MeshType &m, DistType DType=AreaDist, bool useScaledValues=true)
     {
         if (DType==CrossDist)
         {
@@ -486,8 +486,9 @@ public:
             return res;
         }
 
-        ScalarType edge_scale,area_scale;
-        MeshScalingFactor(m,area_scale,edge_scale);
+        ScalarType edge_scale=1,area_scale=1;
+        if (useScaledValues)
+            MeshScalingFactor(m,area_scale,edge_scale);
 
         ScalarType tot = 0;
         ScalarType totA = 0;
